@@ -1,5 +1,4 @@
 # youtube_API_DataCollection
-Using python, pandas, numpy, and youtube API to keep track of searches, videos, channels, and other information.
 
 ### Introduction
 This is a current work in progress, which is constantly being updated as I collect more and more information. This is meant to be a collection of relevant functions that can be used within a python IDE or jupyter notebook. However; if being used it should have the relevant libraries downloaded. 

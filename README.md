@@ -9,6 +9,6 @@ _V.1 - Right now, the current build is only meant to return a dataframe of max v
 **UPDATE:** I updated the function to include more options for users to put in information. This is currently not complete, but on it's way to being more functional for other users.
 
 ### Future Improvements
-_ V.1 I think I'll continue to add other functions, possibly even work this code within javascript to make it more user friendly._
+_V.1 I think I'll continue to add other functions, possibly even work this code within javascript to make it more user friendly._
 
 **UPDATE:** There are some potential bugs, I need to fix. There is some index errors and other issues with the program.

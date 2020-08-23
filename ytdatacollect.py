@@ -9,20 +9,18 @@ api_key = '[Insert your api key here]'
 youtube = build('youtube', 'v3', developerKey = api_key)
 
 ## function which takes dates to collect information
-def youtube_collect_by_date(year, month, end_month, start_day, end_day, dataFrame=None):
+def youtube_collect_by_date(dataFrame=None):
     
-    ##Empty lists of information that is collected for dataframe
-    title = []
-    description = []
+    #Empty lists of information that is collected for dataframe
+
     videoId = []
-    publishTime = []
     statistics = []
-    channelTitle = []
+    snippet = []
     tags = []
 
     #Collection of different lists, dictionaries used to compare input between possible inputs for potential errors
     month = {'january': 1, 'february': 2, 'march':3, 'april':4, 'may': 5, 'june':6, 'july':7, 'august':8, 'september':9, 'october':10, 'november':11, 'december':12}
-    resource = ['channel','playlist','video']
+    resource = ['channel','playlist','videos']
     order = ['date', 'rating','relevance','title','videocount','viewcount']
     
     # All error messages for invalid inputs
@@ -45,26 +43,28 @@ def youtube_collect_by_date(year, month, end_month, start_day, end_day, dataFram
             print('What are your search keywords? (input words or None)')
             search_input = input()
             search_input = search_input.lower()
-                if search_input != 'none':
-                    search_keywords = search_input
-                    user_error = False
-                else:
-                    print('There may have been a slight mistake I guess. Let us continue')
-                    user_error = False
+            if search_input != 'none':
+                search_keywords = search_input
+                user_error = False
+            else:
+                print('There may have been a slight mistake I guess. Let us continue')
+                search_keywords = None
+                user_error = False
         elif yes_no_input == 'n':
-            print("Okay we will just continue on.")
+            search_keywords = None
             user_error = False
         else:
             print(input_error)
 
-    print("Next, let's go through some dates together. First, I want to know the years you want to search through")
+    print("\nNext, let's go through some dates together. First, I want to know the years you want to search through")
 
     # Dates however, are not so optional. This will look through specific dates for the user. First, asking for year and then asking for month and days to look through
     user_error = True
     while user_error:
         print('Which year would you like to begin your search')
         year_input = input()
-        if len(year_input) > 1:
+        year_input_split = year_input.split()
+        if len(year_input_split) > 1:
             print('Invalid input. You must ONLY type in the year')
         else:
             try: 
@@ -82,21 +82,20 @@ def youtube_collect_by_date(year, month, end_month, start_day, end_day, dataFram
                     except ValueError:
                         print(year_error)
                 elif another_year_yes_or_no_input == 'n':
-                    end_year = year
-                    print("Okay let's continue on")
+                    end_year = start_year
                     user_error = False
                 else:
                     print(input_error)
             except ValueError:
                 print(year_error)
 
-    print("Let's now discuss specific months and dates. Remember to type in the month like January or March and then with a space type in the date you want as well as a number like 30 or 10")
-    
+    print("\nLet's now discuss specific months and dates.") 
+    print("type in the month like January or March and then the date as an integer")
     print('Which month and which day would you like to start your search?')
     user_error = True
     while user_error:
         start_date_input = input()
-        start_date_input = month_input.lower()
+        start_date_input = start_date_input.lower()
         start_date_input = start_date_input.split()
         if len(start_date_input) != 2:
             print(input_error)
@@ -136,28 +135,47 @@ def youtube_collect_by_date(year, month, end_month, start_day, end_day, dataFram
             except ValueError:
                 print(date_error)
 
-    ##Creates time frame from arguments in function
-    ##start_time = datetime(year= year, month=month, day=start_day).strftime('%Y-%m-%dT%H:%M:%SZ')
-    ##end_time = datetime(year= year, month=end_month, day=end_day).strftime('%Y-%m-%dT%H:%M:%SZ')    
-    
+    ##Creates time frame from arguments in function   
     start_time = datetime(year= start_year, month=start_month, day=start_date).strftime('%Y-%m-%dT%H:%M:%SZ')
     end_time = datetime(year= end_year, month=end_month, day=end_date).strftime('%Y-%m-%dT%H:%M:%SZ')
 
     ## Can search through different types, but I havent debugged it yet, so this is still a work in progress because I don't know how it will affect the search.
-    print("Since we have the dates, let's now figure out if you are searching for videos, channels, or playlists")
+    print("\nSince we have the dates, let's now figure out if you are searching for videos, channels, or playlists")
     user_error = True
     while user_error:
         resource_input = input()
         resource_input = resource_input.lower()
         if resource_input not in resource:
             print(input_error)
+        elif resource_input == 'videos':
+            type_resource = 'video'
+            user_error = False
         else:
             type_resource = resource_input
             user_error = False
 
+    print("\nDid you want to adjust the results per page? (Y/N)")
+    print("Default will return maximum value of 50")
+    user_error = True
+    while user_error:
+        yes_no_input = input()
+        yes_no_input = yes_no_input.lower()
+        if yes_no_input == 'y':
+            print("How many results per page?")
+            results_input = input()
+            try:
+                results_input = int(results_input)
+            except ValueError:
+                print(input_error)
+        elif yes_no_input == 'n':
+            print("Default value has been set to 50")
+            results_input = 50
+            user_error = False
+        else:
+            print(input_error)
 
     #Order of the query. Default is technically relevance, but I didn't want to code for any default values just prefer user to make their own choice.
-    print("Finally, I want to figure out the order you want to search")
+    print("\nFinally, I want to figure out the order you want to search")
     print("You can only order your search by: date, rating, relevance, title, videocount, or viewcount")
     user_error = True
     while user_error:
@@ -174,31 +192,23 @@ def youtube_collect_by_date(year, month, end_month, start_day, end_day, dataFram
         else:
             order_select = order_input
             user_error = False
-
-    request = youtube.search().list(part='snippet',type ='video', publishedAfter=start_time, publishedBefore = end_time, order='viewCount', maxResults = 50, regionCode='US').execute()
+    
+    request = youtube.search().list(q = search_keywords, part='snippet',type = type_resource, publishedAfter=start_time, publishedBefore = end_time, order=order_select, maxResults = results_input, regionCode='US').execute()
     
     for i in range(0,len(request['items'])):
-        title.append(request['items'][i]['snippet']['title'])
-        description.append(request['items'][i]['snippet']['description'])
+        snippet.append(request['items'][i]['snippet'])
         videoId.append(request['items'][i]['id']['videoId'])
-        publishTime.append(request['items'][i]['snippet']['publishTime'])
 
-    ##df = pd.DataFrame({'title':title,'description':description,'videoId':videoId, 'publishTime':publishTime})
-
-    ##for vid in df['videoId']:
     for vid in videoId:
         videoView = youtube.videos().list(id = vid, part='statistics').execute()
         idView =  youtube.videos().list(id = vid, part = 'snippet').execute()
         statistics.append(videoView['items'][0]['statistics'])
         tags.append(idView['items'][0]['snippet']['tags'])
-        channelTitle.append(idView['items'][0]['snippet']['channelTitle'])
     
-    df = pd.DataFrame({'title': title, 'description': description, 'videoId': videoId, 'publishTime':publishTime, 'tags': tags, 'channelTitle' : channelTitle})
-    
+    df = pd.DataFrame(snippet)
     statistics_list = pd.DataFrame(statistics)
     collect_results = pd.concat([df, statistics_list], axis = 1)
-    #collect_results['tags'] = pd.Series(tags, dtype='object')
-    #collect_results['channeltitle'] = pd.Series(channelTitle, dtype='object')
+    collect_results['tags'] = pd.Series(tags, dtype='object')
     
     user_input_choice = True
     nextPgToken = request['nextPageToken']
@@ -208,13 +218,10 @@ def youtube_collect_by_date(year, month, end_month, start_day, end_day, dataFram
         user_input = user_input.lower()
         if user_input == 'y':
             
-            title.clear()
-            description.clear()
             videoId.clear()
-            publishTime.clear()
             statistics.clear()
-            channelTitle.clear()
             tags.clear()
+            snippet.clear()
             
             request_two = youtube.search().list(part='snippet',type ='video', publishedAfter=start_time, publishedBefore = end_time, order='viewCount', maxResults = 50, regionCode='US', pageToken = nextPgToken).execute()
             nextPgToken = request_two['nextPageToken']
@@ -223,30 +230,19 @@ def youtube_collect_by_date(year, month, end_month, start_day, end_day, dataFram
                 user_input_choice = False
                 
             for i in range(0,len(request_two['items'])):
-                title.append(request_two['items'][i]['snippet']['title'])
-                description.append(request_two['items'][i]['snippet']['description'])
+                snippet.append(request_two['items'][i]['snippet'])
                 videoId.append(request_two['items'][i]['id']['videoId'])
-                publishTime.append(request_two['items'][i]['snippet']['publishTime'])
 
-            ##next_df = pd.DataFrame({'title':title,'description':description,'videoId':videoId, 'publishTime':publishTime})
-
-            ##for vid in next_df['videoId']:
             for vid in videoId:
                 videoView = youtube.videos().list(id = vid, part='statistics').execute()
                 idView =  youtube.videos().list(id = vid, part = 'snippet').execute()
                 statistics.append(videoView['items'][0]['statistics'])
-                if len(idView['items'][0]['snippet']['tags']) != 0:
-                    tags.append(idView['items'][0]['snippet']['tags'])
-                else:
-                    tags.append('None')
-                channelTitle.append(idView['items'][0]['snippet']['channelTitle'])
+                tags.append(idView['items'][0]['snippet']['tags'])
 
-            next_df = pd.DataFrame({'title': title, 'description': description, 'videoId': videoId, 'publishTime':publishTime, 'tags': tags, 'channelTitle' : channelTitle})
-
+            next_df = pd.DataFrame(snippet)
             next_statistics_list = pd.DataFrame(statistics)
             next_results = pd.concat([next_df, statistics_list], axis = 1)
-            #next_results['tags'] = pd.Series(tags, dtype='object')
-            #next_results['channeltitle'] = pd.Series(channelTitle, dtype='object')
+            next_results['tags'] = pd.Series(tags, dtype='object')
             collect_results = pd.concat([collect_results, next_results], axis = 0, ignore_index = True)
                         
         elif user_input == 'n':

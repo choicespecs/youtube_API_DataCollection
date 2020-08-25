@@ -12,7 +12,6 @@ youtube = build('youtube', 'v3', developerKey = api_key)
 def youtube_collect_by_date(dataFrame=None):
     
     #Empty lists of information that is collected for dataframe
-
     videoId = []
     statistics = []
     snippet = []
@@ -28,7 +27,6 @@ def youtube_collect_by_date(dataFrame=None):
     month_error = 'Invalid Input. You must type in a valid month'
     year_error = 'Invalid Input. You must type in a integer for the year'
     input_error = 'Invalid Input. Please reenter your input'
-
 
     print("Hello, I'm the youtube collector. I'm going to ask a lot of specific questions to help you with your search")
     print("First, Do you have any specific words you are looking for in your search? (Y/N)")
@@ -203,7 +201,10 @@ def youtube_collect_by_date(dataFrame=None):
         videoView = youtube.videos().list(id = vid, part='statistics').execute()
         idView =  youtube.videos().list(id = vid, part = 'snippet').execute()
         statistics.append(videoView['items'][0]['statistics'])
-        tags.append(idView['items'][0]['snippet']['tags'])
+        try:
+            tags.append(idView['items'][0]['snippet']['tags'])
+        except KeyError:
+            tags.append("None")
     
     df = pd.DataFrame(snippet)
     statistics_list = pd.DataFrame(statistics)
@@ -237,7 +238,10 @@ def youtube_collect_by_date(dataFrame=None):
                 videoView = youtube.videos().list(id = vid, part='statistics').execute()
                 idView =  youtube.videos().list(id = vid, part = 'snippet').execute()
                 statistics.append(videoView['items'][0]['statistics'])
-                tags.append(idView['items'][0]['snippet']['tags'])
+                try: 
+                    tags.append(idView['items'][0]['snippet']['tags'])
+                except KeyError:
+                    tags.append("None")
 
             next_df = pd.DataFrame(snippet)
             next_statistics_list = pd.DataFrame(statistics)
@@ -250,6 +254,8 @@ def youtube_collect_by_date(dataFrame=None):
         
         else:
             print('You must choose only y or n')
+        
+    collect_results = collect_results.dropna(subset=['title', 'description'], how='any')
     
     if dataFrame is None:
         print('Search Complete')
